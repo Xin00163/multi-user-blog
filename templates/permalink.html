@@ -2,4 +2,25 @@
 
 {% block content %}
   {{post.render() | safe}}
+
+  <div>
+     <form method="post">
+         <div>
+             <label for="comment">Comment:</label>
+             <input type="text" name="comment" value="">
+         </div>
+         <button type="submit" >Submit</button>
+     </form>
+ </div>
+
+ <div>
+     {% for c in comments %}
+     <blockquote>
+         <a href="/blog/deletecomment/{{p.key().id()}}/{{c.key().id()}}">Delete</a>
+         <a href="/blog/editcomment/{{p.key().id()}}/{{c.key().id()}}">Edit</a>
+         <p>{{ c.comment }}</p>
+     </blockquote>
+     {% endfor %}
+ </div>
+
 {% endblock %}

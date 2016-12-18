@@ -1,7 +1,9 @@
 <div class="post">
   <div class="post-heading">
     <div class="post-title">
-      {{p.subject}}
+      <a href="/blog/{{p.key().id() | safe}}">
+          {{p.subject}}
+      </a>
     </div>
 
     <div class="post-date">
@@ -12,4 +14,9 @@
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
-</div>
+
+  <div class="link">
+    <a href="/blog/like/{{p.key().id() | safe}}">
+        Like this post
+    </a>
+  </div>

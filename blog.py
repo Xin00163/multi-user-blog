@@ -125,10 +125,23 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
+    user_id = db.IntegerProperty(required = True)
+
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
+
+class Like(db.Model):
+    user_id = db.IntegerProperty(required = True)
+    post_id = db.IntegerProperty(required = True)
+
+class Comment(db.Model):
+    user_id = db.IntegerProperty(required = True)
+    post_id = db.IntegerProperty(required = True)
+    content = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -139,6 +152,7 @@ class PostPage(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
+
 
         if not post:
             self.error(404)
@@ -161,7 +175,7 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, user_id=self.user.key().id())
+            p = Post(parent = blog_key(), subject = subject, content = content, user_id = self.user.key().id())
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
@@ -221,8 +235,46 @@ class EditPost(BlogHandler):
             self.render("editpost.html", subject=subject,
                         content=content, error=error)
 
-class DeleteComment(BlogHandler):
+class LikePost(BlogHandler):
+    def get(self, post_id):
+        if self.user:
+            post_id = int(post_id)
+            key = db.Key.from_path('Post', post_id, parent=blog_key())
+            post = db.get(key)
+            if post.user_id == self.user.key().id():
+                self.redirect('/blog/%s' % post_id)
+            else:
+                like = Like(user_id = self.user.key().id(), post_id = post_id)
+                like.put()
+                self.redirect('/blog/%s' % post_id)
+        else:
+            self.redirect("/login?error=You need to be logged, " +
+                          "in order to like your post!!")
 
+
+class NewComment(BlogHandler):
+    def get(self):
+        if self.user:
+            self.render("permalink.html")
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        if not self.user:
+            self.redirect('/blog')
+
+        user_id = self.request.get('user_id')
+        post_id = self.request.get('post_id')
+        content = self.request.get('content')
+
+        if post_id and content:
+            c = Comment(parent = blog_key(), post_id = post_id, content = content, user_id = self.user.key().id())
+            c.put()
+            self.redirect('/blog/%s' % str(c.key().id()))
+        else:
+            self.error ()
+
+class DeleteComment(BlogHandler):
     def get(self, post_id, comment_id):
         if self.user:
             key = db.Key.from_path('Comment', int(comment_id),
@@ -402,6 +454,10 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
                                ('/blog/deletepost/([0-9]+)', DeletePost),
+                               ('/blog/editpost/([0-9]+)', EditPost),
+                               ('/blog/like/([0-9]+)', LikePost),
+                               ('/blog/deletecomment/([0-9]+)', DeleteComment),
+                               ('/blog/editcomment/([0-9]+)', EditComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
