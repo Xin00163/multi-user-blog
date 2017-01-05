@@ -16,7 +16,7 @@ To deploy the app:
 
 6. App will start running on configured port.
 
-Resources
+Resources:
 
 Python
 
