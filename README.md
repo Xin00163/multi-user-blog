@@ -19,5 +19,7 @@ To deploy the app:
 Resources
 
 Python
+
 jinja2 is a templating library for Python & natively implemented in Google App Engine webapp2, GAE's main library
+
 App Engine : Google App Engine (GAE)
